@@ -130,10 +130,11 @@ exports.createPayment = async (req, res) => {
                 payment_status, mercadopago_fee, admin_fee_percentage, admin_fee_amount, couple_amount) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
                 [guest_name, guest_email, item.experience_id, item.quantity, item.unit_price, 
-                 itemTotal, message, preferenceId, mpFeeAmount, adminFee, adminFeeAmount, coupleAmount]
+                 itemTotal, message, externalRef, mpFeeAmount, adminFee, adminFeeAmount, coupleAmount]
             );
         }
 
+        console.log('💾 [CREATE_PAYMENT] Salvo no banco com payment_id:', externalRef);
         console.log('✅ [CREATE_PAYMENT] Sucesso! Retornando init_point');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
