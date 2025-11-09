@@ -62,13 +62,34 @@ exports.createPayment = async (req, res) => {
 
         console.log(`💰 [CREATE_PAYMENT] Total: R$ ${total.toFixed(2)}`);
 
+        // Buscar nomes dos noivos para a descrição
+        const [coupleSettings] = await db.query(
+            'SELECT setting_key, setting_value FROM settings_WED WHERE setting_key IN ("couple_name_1", "couple_name_2")'
+        );
+        
+        let coupleName = 'os Noivos';
+        if (coupleSettings.length > 0) {
+            const name1 = coupleSettings.find(s => s.setting_key === 'couple_name_1')?.setting_value;
+            const name2 = coupleSettings.find(s => s.setting_key === 'couple_name_2')?.setting_value;
+            
+            if (name1 && name2) {
+                coupleName = `${name1} e ${name2}`;
+            } else if (name1) {
+                coupleName = name1;
+            } else if (name2) {
+                coupleName = name2;
+            }
+        }
+        
+        console.log('💑 [CREATE_PAYMENT] Nomes dos noivos:', coupleName);
+
         // Criar preferência no Mercado Pago
         const externalRef = `gift_${Date.now()}`;
         console.log('🔑 [CREATE_PAYMENT] External Reference:', externalRef);
         
         const preferenceData = {
             items: purchaseItems.map(item => ({
-                title: item.title,
+                title: `Presente de Casamento para ${coupleName} - ${item.title} - De ${guest_name}`,
                 unit_price: item.unit_price,
                 quantity: item.quantity
             })),
