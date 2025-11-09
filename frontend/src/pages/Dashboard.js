@@ -61,13 +61,19 @@ function Dashboard() {
                                 <div className="value" style={{color: '#ef4444'}}>
                                     R$ {(parseFloat(summary?.total_mp_fee) || 0).toFixed(2)}
                                 </div>
+                                <p style={{fontSize: '12px', color: '#6b7280', marginTop: '10px'}}>
+                                    Cobrada pelo MP
+                                </p>
                             </div>
                             
                             <div className="stat-card">
-                                <h3>Seu Lucro (Taxa Admin)</h3>
+                                <h3>Seu Lucro Líquido</h3>
                                 <div className="value" style={{color: '#3b82f6'}}>
                                     R$ {(parseFloat(summary?.admin_profit) || 0).toFixed(2)}
                                 </div>
+                                <p style={{fontSize: '12px', color: '#6b7280', marginTop: '10px'}}>
+                                    Taxa Admin - Taxa MP
+                                </p>
                             </div>
                             
                             <div className="stat-card">

@@ -552,18 +552,21 @@ exports.getFinancialSummary = async (req, res) => {
         const totalReceived = parseFloat(summary[0].total_received) || 0;
         const totalMpFee = parseFloat(summary[0].total_mp_fee) || 0;
         const totalAdminFee = parseFloat(summary[0].total_admin_fee) || 0;
+        
+        // Lucro real do admin = Taxa Administrativa - Taxa MercadoPago
+        const adminProfit = totalAdminFee - totalMpFee;
 
-        // Admin vê tudo, incluindo taxa MP e seu lucro
+        // Admin vê tudo, incluindo taxa MP e seu lucro real
         if (userRole === 'admin') {
             res.json({
                 total_received: totalReceived,
                 total_mp_fee: totalMpFee,
-                total_admin_fee: totalAdminFee, // Lucro do admin
+                total_admin_fee: totalAdminFee, // Taxa administrativa total cobrada
                 total_couple_amount: totalCoupleAmount,
                 total_withdrawn: totalWithdrawn,
                 available_balance: availableBalance,
                 total_purchases: parseInt(summary[0].total_purchases) || 0,
-                admin_profit: totalAdminFee, // Lucro total do admin
+                admin_profit: adminProfit, // Lucro líquido do admin (taxa admin - taxa MP)
                 role: 'admin'
             });
         } else {
