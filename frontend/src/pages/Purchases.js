@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
 function Purchases() {
+    const { user, loading: authLoading } = useAuth();
+    const navigate = useNavigate();
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadPurchases();
-    }, []);
+        if (!authLoading && !user) {
+            navigate('/login');
+            return;
+        }
+        
+        if (user) {
+            loadPurchases();
+        }
+    }, [user, authLoading, navigate]);
 
     const loadPurchases = async () => {
         try {

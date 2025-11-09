@@ -213,9 +213,12 @@ exports.confirmPresence = async (req, res) => {
         const coupleUsers = users.filter(u => u.role === 'couple');
         const adminUsers = users.filter(u => u.role === 'admin');
 
+        console.log(`📧 [CONFIRMATION] Encontrados ${coupleUsers.length} noivo(s) e ${adminUsers.length} admin(s)`);
+
         // 3. EMAIL PARA OS NOIVOS
         for (const couple of coupleUsers) {
             try {
+                console.log(`📤 [CONFIRMATION] Enviando email para noivo(a): ${couple.email}`);
                 await sendEmail({
                     to: couple.email,
                     subject: `🎉 ${guestCount} ${guestCount === 1 ? 'pessoa confirmou' : 'pessoas confirmaram'} presença no seu casamento!`,
@@ -269,6 +272,7 @@ exports.confirmPresence = async (req, res) => {
         // 4. EMAIL PARA O ADMIN
         for (const admin of adminUsers) {
             try {
+                console.log(`📤 [CONFIRMATION] Enviando email para admin: ${admin.email}`);
                 await sendEmail({
                     to: admin.email,
                     subject: `📋 Confirmação de Presença - Casamento ${weddingInfo.couple_name_1} & ${weddingInfo.couple_name_2}`,

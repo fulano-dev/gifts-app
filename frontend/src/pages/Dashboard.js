@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
 function Dashboard() {
-    // const { user } = useAuth(); // Removido - não está sendo usado
+    const { user, loading: authLoading } = useAuth();
+    const navigate = useNavigate();
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadSummary();
-    }, []);
+        // Só redireciona se não estiver carregando E não tiver usuário
+        if (!authLoading && !user) {
+            navigate('/login');
+            return;
+        }
+        
+        if (user) {
+            loadSummary();
+        }
+    }, [user, authLoading, navigate]);
 
     const loadSummary = async () => {
         try {
