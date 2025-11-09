@@ -8,15 +8,7 @@ function Confirmation() {
     const [guests, setGuests] = useState([]);
     const [selectedGuests, setSelectedGuests] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
-
-    useEffect(() => {
-        if (searchTerm.length >= 2) {
-            searchGuests();
-        } else {
-            setGuests([]);
-            setShowDropdown(false);
-        }
-    }, [searchTerm]);
+    const [email, setEmail] = useState('');
 
     const searchGuests = async () => {
         try {
@@ -27,6 +19,16 @@ function Confirmation() {
             console.error('Erro ao buscar convidados:', error);
         }
     };
+
+    useEffect(() => {
+        if (searchTerm.length >= 2) {
+            searchGuests();
+        } else {
+            setGuests([]);
+            setShowDropdown(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
 
     const selectGuest = (guest) => {
         setSelectedGuests([...selectedGuests, guest]);
@@ -45,13 +47,20 @@ function Confirmation() {
             return;
         }
 
+        if (!email || !email.includes('@')) {
+            toast.error('Por favor, insira um email válido');
+            return;
+        }
+
         try {
             await api.post('/guests/confirm', {
-                guestIds: selectedGuests.map(g => g.id)
+                guestIds: selectedGuests.map(g => g.id),
+                email: email
             });
             
             toast.success('Presença confirmada com sucesso! Verifique seu email.');
             setSelectedGuests([]);
+            setEmail('');
         } catch (error) {
             toast.error('Erro ao confirmar presença');
             console.error(error);
@@ -115,6 +124,20 @@ function Confirmation() {
                                     </div>
                                 </div>
                             )}
+
+                            <div className="form-group">
+                                <label>Seu Email *</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="seuemail@exemplo.com"
+                                    required
+                                />
+                                <small style={{color: '#666', marginTop: '5px', display: 'block'}}>
+                                    Enviaremos os detalhes do evento para este email
+                                </small>
+                            </div>
 
                             <button 
                                 onClick={confirmPresence} 
