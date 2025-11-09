@@ -70,7 +70,7 @@ exports.createPayment = async (req, res) => {
                 pending: `${process.env.FRONTEND_URL}/pagamento/pendente`
             },
             auto_return: 'approved',
-            notification_url: `${process.env.FRONTEND_URL}/api/payments/webhook`,
+            notification_url: `${process.env.BACKEND_URL}/api/payments/webhook`,
             metadata: {
                 guest_name,
                 guest_email,
