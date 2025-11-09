@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
@@ -11,7 +11,6 @@ function Gifts() {
     const [guestName, setGuestName] = useState('');
     const [guestEmail, setGuestEmail] = useState('');
     const [message, setMessage] = useState('');
-    const navigate = useNavigate();
 
     useEffect(() => {
         loadExperiences();
