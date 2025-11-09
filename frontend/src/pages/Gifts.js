@@ -125,12 +125,31 @@ function Gifts() {
                     <h2 className="section-title">Experiências da Lua de Mel 🌙</h2>
                     
                     {cart.length > 0 && (
-                        <div style={{background: '#667eea', color: 'white', padding: '15px', borderRadius: '8px', marginBottom: '30px', textAlign: 'center'}}>
-                            <strong>{cart.length} item(ns) no carrinho - Total: R$ {getCartTotal().toFixed(2)}</strong>
+                        <div style={{
+                            background: '#667eea', 
+                            color: 'white', 
+                            padding: '15px 20px', 
+                            borderRadius: '8px', 
+                            marginBottom: '30px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '10px'
+                        }}>
+                            <strong style={{fontSize: '16px'}}>
+                                {cart.length} item(ns) no carrinho - Total: R$ {getCartTotal().toFixed(2)}
+                            </strong>
                             <button 
                                 onClick={() => setShowCheckout(true)} 
                                 className="btn btn-primary"
-                                style={{marginLeft: '15px'}}
+                                style={{
+                                    background: 'white',
+                                    color: '#667eea',
+                                    border: 'none',
+                                    padding: '10px 20px',
+                                    fontWeight: 'bold'
+                                }}
                             >
                                 Finalizar Compra
                             </button>
