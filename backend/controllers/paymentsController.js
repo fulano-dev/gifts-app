@@ -81,15 +81,6 @@ exports.createPayment = async (req, res) => {
 
         const response = await preference.create({ body: preferenceData });
 
-        // A resposta da API v2 retorna os dados diretamente, não em response.body
-        const preferenceId = response.id || response.body?.id;
-        const initPoint = response.init_point || response.body?.init_point;
-
-        if (!preferenceId) {
-            console.error('Erro: Preferência criada mas sem ID:', response);
-            throw new Error('Não foi possível obter ID da preferência');
-        }
-
         // Salvar compra pendente
         for (const item of purchaseItems) {
             // Obter configurações
@@ -108,13 +99,13 @@ exports.createPayment = async (req, res) => {
                 payment_status, mercadopago_fee, admin_fee_percentage, admin_fee_amount, couple_amount) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
                 [guest_name, guest_email, item.experience_id, item.quantity, item.unit_price, 
-                 itemTotal, message, preferenceId, mpFeeAmount, adminFee, adminFeeAmount, coupleAmount]
+                 itemTotal, message, response.body.id, mpFeeAmount, adminFee, adminFeeAmount, coupleAmount]
             );
         }
 
         res.json({
-            preference_id: preferenceId,
-            init_point: initPoint
+            preference_id: response.body.id,
+            init_point: response.body.init_point
         });
     } catch (error) {
         console.error('Erro ao criar pagamento:', error);
