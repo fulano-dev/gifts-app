@@ -156,7 +156,7 @@ function Gifts() {
                             }}></div>
                             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                 <span style={{fontSize: '24px'}}>💳</span>
-                                <span>Cartão de Crédito em até 12x sem juros</span>
+                                <span>Cartão de Crédito em até 12x com juros</span>
                             </div>
                         </div>
                     </div>
