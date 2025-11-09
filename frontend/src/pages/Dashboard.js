@@ -104,20 +104,12 @@ function Dashboard() {
                     <>
                         <div className="stats-grid">
                             <div className="stat-card">
-                                <h3>Total Recebido</h3>
-                                <div className="value">R$ {(parseFloat(summary?.total_received) || 0).toFixed(2)}</div>
-                                <p style={{fontSize: '12px', color: '#6b7280', marginTop: '10px'}}>
-                                    Valor bruto dos presentes
-                                </p>
-                            </div>
-                            
-                            <div className="stat-card">
                                 <h3>Total Disponível</h3>
                                 <div className="value" style={{color: '#10b981'}}>
                                     R$ {(parseFloat(summary?.total_couple_amount) || 0).toFixed(2)}
                                 </div>
                                 <p style={{fontSize: '12px', color: '#6b7280', marginTop: '10px'}}>
-                                    Após taxa administrativa
+                                    Total após taxa administrativa
                                 </p>
                             </div>
                             
