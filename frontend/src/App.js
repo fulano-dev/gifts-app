@@ -9,6 +9,7 @@ import Confirmation from './pages/Confirmation';
 import Gifts from './pages/Gifts';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentError from './pages/PaymentError';
+import PaymentPending from './pages/PaymentPending';
 
 // Páginas de autenticação
 import Login from './pages/Login';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/presentes" element={<Gifts />} />
             <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
             <Route path="/pagamento/erro" element={<PaymentError />} />
+            <Route path="/pagamento/pendente" element={<PaymentPending />} />
             
             {/* Autenticação */}
             <Route path="/admin" element={<Navigate to="/login" replace />} />

@@ -114,23 +114,26 @@ exports.createPayment = async (req, res) => {
         console.log('💾 [CREATE_PAYMENT] Salvando no banco...');
         
         for (const item of purchaseItems) {
-            // Obter configurações
-            const [settings] = await db.query('SELECT * FROM settings_WED WHERE setting_key IN ("admin_fee_percentage", "mercadopago_fee_percentage")');
-            const adminFee = parseFloat(settings.find(s => s.setting_key === 'admin_fee_percentage')?.setting_value || 5);
-            const mpFee = parseFloat(settings.find(s => s.setting_key === 'mercadopago_fee_percentage')?.setting_value || 5);
+            // Obter apenas a taxa administrativa (MP será calculado depois)
+            const [settings] = await db.query('SELECT * FROM settings_WED WHERE setting_key = "admin_fee_percentage"');
+            const adminFeePercentage = parseFloat(settings[0]?.setting_value || 10);
 
             const itemTotal = item.unit_price * item.quantity;
-            const mpFeeAmount = itemTotal * (mpFee / 100);
-            const adminFeeAmount = itemTotal * (adminFee / 100);
-            const coupleAmount = itemTotal - mpFeeAmount - adminFeeAmount;
+            const adminFeeAmount = itemTotal * (adminFeePercentage / 100);
+            const coupleAmount = itemTotal - adminFeeAmount;
+
+            console.log(`📊 [CREATE_PAYMENT] Item: ${item.title}`);
+            console.log(`   Valor: R$ ${itemTotal.toFixed(2)}`);
+            console.log(`   Taxa Admin (${adminFeePercentage}%): R$ ${adminFeeAmount.toFixed(2)}`);
+            console.log(`   Valor Noivos: R$ ${coupleAmount.toFixed(2)}`);
 
             await db.query(
                 `INSERT INTO purchases_WED 
                 (guest_name, guest_email, experience_id, quantity, price, total_amount, message, payment_id, 
                 payment_status, mercadopago_fee, admin_fee_percentage, admin_fee_amount, couple_amount) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?)`,
                 [guest_name, guest_email, item.experience_id, item.quantity, item.unit_price, 
-                 itemTotal, message, externalRef, mpFeeAmount, adminFee, adminFeeAmount, coupleAmount]
+                 itemTotal, message, externalRef, adminFeePercentage, adminFeeAmount, coupleAmount]
             );
         }
 
@@ -181,12 +184,19 @@ exports.paymentWebhook = async (req, res) => {
                     status: paymentInfo.status,
                     external_reference: paymentInfo.external_reference,
                     transaction_amount: paymentInfo.transaction_amount,
+                    transaction_details: paymentInfo.transaction_details,
+                    fee_details: paymentInfo.fee_details,
                     payer: paymentInfo.payer?.email
                 }, null, 2));
 
                 const externalRef = paymentInfo.external_reference;
                 const mpPaymentId = paymentInfo.id;
                 const status = paymentInfo.status;
+                
+                // Buscar taxa REAL do MercadoPago da API
+                const transactionAmount = parseFloat(paymentInfo.transaction_amount) || 0;
+                const netReceivedAmount = parseFloat(paymentInfo.transaction_details?.net_received_amount) || transactionAmount;
+                const mpFeeReal = transactionAmount - netReceivedAmount;
 
                 if (!externalRef) {
                     console.error('❌ [WEBHOOK] External reference não encontrado no pagamento');
@@ -195,12 +205,15 @@ exports.paymentWebhook = async (req, res) => {
 
                 console.log('🔑 [WEBHOOK] External Reference:', externalRef);
                 console.log('📊 [WEBHOOK] Status:', status);
+                console.log('💰 [WEBHOOK] Valor transação:', transactionAmount);
+                console.log('💵 [WEBHOOK] Valor líquido recebido:', netReceivedAmount);
+                console.log('💳 [WEBHOOK] Taxa MercadoPago REAL:', mpFeeReal.toFixed(2));
                 
                 // Atualizar status da compra com external_reference E payment_id do MercadoPago
                 console.log('💾 [WEBHOOK] Atualizando status no banco...');
                 const [updateResult] = await db.query(
-                    'UPDATE purchases_WED SET payment_status = ?, mercadopago_payment_id = ? WHERE payment_id = ?',
-                    [status, mpPaymentId, externalRef]
+                    'UPDATE purchases_WED SET payment_status = ?, mercadopago_payment_id = ?, mercadopago_fee = ? WHERE payment_id = ?',
+                    [status, mpPaymentId, mpFeeReal, externalRef]
                 );
                 
                 console.log('💾 [WEBHOOK] Linhas afetadas:', updateResult.affectedRows);
@@ -343,23 +356,10 @@ exports.paymentWebhook = async (req, res) => {
                                                     <p style="margin: 5px 0; color: #6b7280;">Email: ${purchase.guest_email}</p>
                                                 </div>
                                                 
-                                                <div class="details">
-                                                    <div class="details-row">
-                                                        <span>💰 Valor Total:</span>
-                                                        <span style="font-weight: 600;">R$ ${totalAmount.toFixed(2)}</span>
-                                                    </div>
-                                                    <div class="details-row">
-                                                        <span>💳 Taxa MercadoPago:</span>
-                                                        <span style="color: #ef4444;">- R$ ${mpFee.toFixed(2)}</span>
-                                                    </div>
-                                                    <div class="details-row">
-                                                        <span>📊 Taxa Administrativa:</span>
-                                                        <span style="color: #f59e0b;">- R$ ${adminFee.toFixed(2)}</span>
-                                                    </div>
-                                                    <div class="details-row">
-                                                        <span>💚 Valor para Vocês:</span>
-                                                        <span>R$ ${coupleAmount.toFixed(2)}</span>
-                                                    </div>
+                                                <div style="text-align: center; margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px;">
+                                                    <p style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">💰 VALOR DISPONÍVEL PARA SAQUE</p>
+                                                    <div style="font-size: 42px; font-weight: bold; color: #059669; margin: 10px 0;">R$ ${coupleAmount.toFixed(2)}</div>
+                                                    <p style="margin: 5px 0 0 0; color: #047857; font-size: 12px;">Taxa administrativa já descontada (${purchase.admin_fee_percentage}%)</p>
                                                 </div>
                                                 
                                                 ${purchase.message ? `
@@ -371,6 +371,7 @@ exports.paymentWebhook = async (req, res) => {
                                                 
                                                 <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f0fdf4; border-radius: 8px;">
                                                     <p style="margin: 0; font-size: 18px; color: #10b981; font-weight: 600;">🎉 Parabéns pelo novo presente!</p>
+                                                    <p style="margin: 10px 0 0 0; color: #059669; font-size: 14px;">Você pode solicitar o saque no painel administrativo.</p>
                                                 </div>
                                             </div>
                                             <div class="footer">
@@ -384,6 +385,8 @@ exports.paymentWebhook = async (req, res) => {
                             
                             // 3. EMAIL PARA O ADMIN
                             for (const admin of adminUsers) {
+                                const adminProfit = adminFee; // O lucro do admin é a taxa administrativa
+                                
                                 await sendEmail({
                                     to: admin.email,
                                     subject: `💰 Novo Pagamento - Casamento Vanessa & Guilherme`,
@@ -413,25 +416,31 @@ exports.paymentWebhook = async (req, res) => {
                                                 
                                                 <div class="details">
                                                     <div class="details-row">
-                                                        <span>💰 Valor Total:</span>
+                                                        <span>💰 Valor Total Pago:</span>
                                                         <span style="font-weight: 600;">R$ ${totalAmount.toFixed(2)}</span>
                                                     </div>
                                                     <div class="details-row">
-                                                        <span>💳 Taxa MercadoPago (${purchase.admin_fee_percentage}%):</span>
-                                                        <span style="color: #ef4444;">R$ ${mpFee.toFixed(2)}</span>
+                                                        <span>💳 Taxa MercadoPago:</span>
+                                                        <span style="color: #ef4444;">- R$ ${mpFee.toFixed(2)}</span>
                                                     </div>
                                                     <div class="details-row">
-                                                        <span>📊 Taxa Administrativa (${purchase.admin_fee_percentage}%):</span>
-                                                        <span style="color: #3b82f6;">R$ ${adminFee.toFixed(2)}</span>
+                                                        <span>📊 Sua Taxa Administrativa (${purchase.admin_fee_percentage}%):</span>
+                                                        <span style="color: #3b82f6; font-weight: 600;">R$ ${adminProfit.toFixed(2)}</span>
                                                     </div>
                                                     <div class="details-row">
                                                         <span>💚 Valor dos Noivos:</span>
-                                                        <span style="color: #6b7280;">R$ ${coupleAmount.toFixed(2)}</span>
+                                                        <span style="color: #10b981;">R$ ${coupleAmount.toFixed(2)}</span>
                                                     </div>
                                                 </div>
                                                 
+                                                <div style="text-align: center; margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 12px;">
+                                                    <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 600;">💵 SEU LUCRO NESTA TRANSAÇÃO</p>
+                                                    <div style="font-size: 42px; font-weight: bold; color: #2563eb; margin: 10px 0;">R$ ${adminProfit.toFixed(2)}</div>
+                                                    <p style="margin: 5px 0 0 0; color: #1d4ed8; font-size: 12px;">Taxa de ${purchase.admin_fee_percentage}% sobre R$ ${totalAmount.toFixed(2)}</p>
+                                                </div>
+                                                
                                                 <div style="text-align: center; margin: 30px 0;">
-                                                    <p style="color: #6b7280; font-size: 14px; margin: 0;">ID do Pagamento</p>
+                                                    <p style="color: #6b7280; font-size: 14px; margin: 0;">ID do Pagamento MercadoPago</p>
                                                     <p style="color: #3b82f6; font-family: monospace; margin: 5px 0;">#${mpPaymentId}</p>
                                                 </div>
                                             </div>
@@ -497,6 +506,8 @@ exports.listPurchases = async (req, res) => {
 // Dashboard financeiro
 exports.getFinancialSummary = async (req, res) => {
     try {
+        const userRole = req.user?.role || 'couple'; // Pega role do usuário autenticado
+        
         const [summary] = await db.query(`
             SELECT 
                 COALESCE(SUM(total_amount), 0) as total_received,
@@ -517,16 +528,34 @@ exports.getFinancialSummary = async (req, res) => {
         const totalWithdrawn = parseFloat(withdrawals[0].total_withdrawn) || 0;
         const totalCoupleAmount = parseFloat(summary[0].total_couple_amount) || 0;
         const availableBalance = totalCoupleAmount - totalWithdrawn;
+        const totalReceived = parseFloat(summary[0].total_received) || 0;
+        const totalMpFee = parseFloat(summary[0].total_mp_fee) || 0;
+        const totalAdminFee = parseFloat(summary[0].total_admin_fee) || 0;
 
-        res.json({
-            total_received: parseFloat(summary[0].total_received) || 0,
-            total_mp_fee: parseFloat(summary[0].total_mp_fee) || 0,
-            total_admin_fee: parseFloat(summary[0].total_admin_fee) || 0,
-            total_couple_amount: totalCoupleAmount,
-            total_withdrawn: totalWithdrawn,
-            available_balance: availableBalance,
-            total_purchases: parseInt(summary[0].total_purchases) || 0
-        });
+        // Admin vê tudo, incluindo taxa MP e seu lucro
+        if (userRole === 'admin') {
+            res.json({
+                total_received: totalReceived,
+                total_mp_fee: totalMpFee,
+                total_admin_fee: totalAdminFee, // Lucro do admin
+                total_couple_amount: totalCoupleAmount,
+                total_withdrawn: totalWithdrawn,
+                available_balance: availableBalance,
+                total_purchases: parseInt(summary[0].total_purchases) || 0,
+                admin_profit: totalAdminFee, // Lucro total do admin
+                role: 'admin'
+            });
+        } else {
+            // Noivos veem apenas o saldo disponível (sem detalhes de taxa MP)
+            res.json({
+                total_received: totalReceived,
+                total_couple_amount: totalCoupleAmount,
+                total_withdrawn: totalWithdrawn,
+                available_balance: availableBalance,
+                total_purchases: parseInt(summary[0].total_purchases) || 0,
+                role: 'couple'
+            });
+        }
     } catch (error) {
         console.error('Erro ao buscar resumo financeiro:', error);
         res.status(500).json({ error: 'Erro ao buscar resumo financeiro' });
