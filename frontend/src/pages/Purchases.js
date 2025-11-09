@@ -5,7 +5,6 @@ import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
 function Purchases() {
-    const { user } = useAuth();
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
 

@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
 function Dashboard() {
-    const { user } = useAuth();
+    // const { user } = useAuth(); // Removido - não está sendo usado
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
 

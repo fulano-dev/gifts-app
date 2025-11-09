@@ -5,7 +5,6 @@ import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
 function ManageExperiences() {
-    const { user } = useAuth();
     const [experiences, setExperiences] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
