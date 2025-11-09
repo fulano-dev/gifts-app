@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
@@ -7,7 +6,6 @@ import api from '../services/api';
 
 function Withdrawals() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [withdrawals, setWithdrawals] = useState([]);
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -18,12 +16,8 @@ function Withdrawals() {
     });
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
         loadData();
-    }, [user, navigate]);
+    }, []);
 
     const loadData = async () => {
         try {

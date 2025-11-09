@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
@@ -7,17 +6,12 @@ import api from '../services/api';
 
 function Purchases() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
         loadPurchases();
-    }, [user, navigate]);
+    }, []);
 
     const loadPurchases = async () => {
         try {

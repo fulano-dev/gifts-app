@@ -25,6 +25,7 @@ import Users from './pages/Users';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -44,14 +45,14 @@ function App() {
             <Route path="/admin" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             
-            {/* Painel */}
-            <Route path="/painel" element={<Dashboard />} />
-            <Route path="/painel/convidados" element={<ManageGuests />} />
-            <Route path="/painel/experiencias" element={<ManageExperiences />} />
-            <Route path="/painel/compras" element={<Purchases />} />
-            <Route path="/painel/saques" element={<Withdrawals />} />
-            <Route path="/painel/configuracoes" element={<Settings />} />
-            <Route path="/painel/usuarios" element={<Users />} />
+            {/* Painel - Rotas Protegidas */}
+            <Route path="/painel" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/painel/convidados" element={<ProtectedRoute><ManageGuests /></ProtectedRoute>} />
+            <Route path="/painel/experiencias" element={<ProtectedRoute><ManageExperiences /></ProtectedRoute>} />
+            <Route path="/painel/compras" element={<ProtectedRoute><Purchases /></ProtectedRoute>} />
+            <Route path="/painel/saques" element={<ProtectedRoute><Withdrawals /></ProtectedRoute>} />
+            <Route path="/painel/configuracoes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/painel/usuarios" element={<ProtectedRoute><Users /></ProtectedRoute>} />
           </Routes>
           <ToastContainer position="top-right" autoClose={3000} />
         </div>

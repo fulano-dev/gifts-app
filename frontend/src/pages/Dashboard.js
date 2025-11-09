@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
 function Dashboard() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
         loadSummary();
-    }, [user, navigate]);
+    }, []);
 
     const loadSummary = async () => {
         try {

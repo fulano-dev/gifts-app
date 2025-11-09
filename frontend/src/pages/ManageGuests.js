@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
@@ -7,7 +6,6 @@ import api from '../services/api';
 
 function ManageGuests() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [guests, setGuests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -20,12 +18,8 @@ function ManageGuests() {
     });
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
         loadGuests();
-    }, [user, navigate]);
+    }, []);
 
     const loadGuests = async () => {
         try {

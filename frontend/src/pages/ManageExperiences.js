@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
@@ -7,7 +6,6 @@ import api from '../services/api';
 
 function ManageExperiences() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [experiences, setExperiences] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -23,12 +21,8 @@ function ManageExperiences() {
     });
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
         loadExperiences();
-    }, [user, navigate]);
+    }, []);
 
     const loadExperiences = async () => {
         try {
