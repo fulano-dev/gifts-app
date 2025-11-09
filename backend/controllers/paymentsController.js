@@ -12,11 +12,18 @@ const payment = new Payment(client);
 
 // Criar preferência de pagamento
 exports.createPayment = async (req, res) => {
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🛒 [CREATE_PAYMENT]', new Date().toISOString());
+    
     try {
         const { items, guest_name, guest_email, message } = req.body;
+        
+        console.log('📦 [CREATE_PAYMENT] Items:', items?.length || 0);
+        console.log('👤 [CREATE_PAYMENT] Guest:', guest_name, '-', guest_email);
 
         // Validar dados
         if (!items || items.length === 0) {
+            console.log('❌ [CREATE_PAYMENT] Nenhum item selecionado');
             return res.status(400).json({ error: 'Nenhum item selecionado' });
         }
 
@@ -53,7 +60,12 @@ exports.createPayment = async (req, res) => {
             });
         }
 
+        console.log(`💰 [CREATE_PAYMENT] Total: R$ ${total.toFixed(2)}`);
+
         // Criar preferência no Mercado Pago
+        const externalRef = `gift_${Date.now()}`;
+        console.log('🔑 [CREATE_PAYMENT] External Reference:', externalRef);
+        
         const preferenceData = {
             items: purchaseItems.map(item => ({
                 title: item.title,
@@ -71,6 +83,8 @@ exports.createPayment = async (req, res) => {
             },
             auto_return: 'approved',
             notification_url: `${process.env.BACKEND_URL}/api/payments/webhook`,
+            statement_descriptor: 'Casamento',
+            external_reference: externalRef,
             metadata: {
                 guest_name,
                 guest_email,
@@ -79,6 +93,9 @@ exports.createPayment = async (req, res) => {
             }
         };
 
+        console.log('🌐 [CREATE_PAYMENT] Webhook URL:', preferenceData.notification_url);
+        console.log('📤 [CREATE_PAYMENT] Enviando ao MercadoPago...');
+
         const response = await preference.create({ body: preferenceData });
 
         // A resposta da API v2 retorna os dados diretamente, não em response.body
@@ -86,11 +103,16 @@ exports.createPayment = async (req, res) => {
         const initPoint = response.init_point || response.body?.init_point;
 
         if (!preferenceId) {
-            console.error('Erro: Preferência criada mas sem ID:', response);
+            console.error('❌ [CREATE_PAYMENT] Preference ID não encontrado:', response);
             throw new Error('Não foi possível obter ID da preferência');
         }
 
+        console.log('✅ [CREATE_PAYMENT] Preferência criada:', preferenceId);
+        console.log('🔗 [CREATE_PAYMENT] Init Point:', initPoint);
+
         // Salvar compra pendente
+        console.log('💾 [CREATE_PAYMENT] Salvando no banco...');
+        
         for (const item of purchaseItems) {
             // Obter configurações
             const [settings] = await db.query('SELECT * FROM settings_WED WHERE setting_key IN ("admin_fee_percentage", "mercadopago_fee_percentage")');
@@ -112,71 +134,135 @@ exports.createPayment = async (req, res) => {
             );
         }
 
+        console.log('✅ [CREATE_PAYMENT] Sucesso! Retornando init_point');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
         res.json({
             preference_id: preferenceId,
             init_point: initPoint
         });
     } catch (error) {
-        console.error('Erro ao criar pagamento:', error);
+        console.error('❌ [CREATE_PAYMENT] ERRO:', error.message);
+        console.error('❌ [CREATE_PAYMENT] Stack:', error.stack);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         res.status(500).json({ error: 'Erro ao criar pagamento' });
     }
 };
 
 // Webhook do Mercado Pago
 exports.paymentWebhook = async (req, res) => {
-    try {
-        const { type, data } = req.body;
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📨 [WEBHOOK]', new Date().toISOString());
+    console.log('📨 [WEBHOOK] Body:', JSON.stringify(req.body, null, 2));
+    console.log('📨 [WEBHOOK] Query:', JSON.stringify(req.query, null, 2));
+    
+    // IMPORTANTE: Responder 200 IMEDIATAMENTE (MercadoPago exige resposta rápida)
+    res.sendStatus(200);
+    console.log('✅ [WEBHOOK] Resposta 200 enviada imediatamente');
 
-        if (type === 'payment') {
-            const paymentId = data.id;
-            
-            // Buscar informações do pagamento
-            const paymentInfo = await payment.get({ id: paymentId });
-            
-            // Atualizar status da compra
-            await db.query(
-                'UPDATE purchases_WED SET payment_status = ? WHERE payment_id = ?',
-                [paymentInfo.status, paymentInfo.external_reference]
-            );
+    // Processar notificação de forma assíncrona
+    (async () => {
+        try {
+            const { type, data } = req.body;
+            console.log('🔔 [WEBHOOK] Type:', type);
+            console.log('🔔 [WEBHOOK] Data:', JSON.stringify(data, null, 2));
 
-            // Se aprovado, atualizar quotas disponíveis
-            if (paymentInfo.status === 'approved') {
-                const [purchases] = await db.query(
-                    'SELECT * FROM purchases_WED WHERE payment_id = ?',
-                    [paymentInfo.external_reference]
+            if (type === 'payment') {
+                const paymentId = data.id;
+                console.log('💳 [WEBHOOK] Payment ID:', paymentId);
+                
+                // Buscar informações do pagamento
+                console.log('🔍 [WEBHOOK] Buscando informações do pagamento...');
+                const paymentInfo = await payment.get({ id: paymentId });
+                
+                console.log('💳 [WEBHOOK] Payment Info:', JSON.stringify({
+                    id: paymentInfo.id,
+                    status: paymentInfo.status,
+                    external_reference: paymentInfo.external_reference,
+                    transaction_amount: paymentInfo.transaction_amount,
+                    payer: paymentInfo.payer?.email
+                }, null, 2));
+
+                const externalRef = paymentInfo.external_reference;
+                const mpPaymentId = paymentInfo.id;
+                const status = paymentInfo.status;
+
+                if (!externalRef) {
+                    console.error('❌ [WEBHOOK] External reference não encontrado no pagamento');
+                    return;
+                }
+
+                console.log('🔑 [WEBHOOK] External Reference:', externalRef);
+                console.log('📊 [WEBHOOK] Status:', status);
+                
+                // Atualizar status da compra com external_reference E payment_id do MercadoPago
+                console.log('💾 [WEBHOOK] Atualizando status no banco...');
+                const [updateResult] = await db.query(
+                    'UPDATE purchases_WED SET payment_status = ?, mercadopago_payment_id = ? WHERE payment_id = ?',
+                    [status, mpPaymentId, externalRef]
                 );
+                
+                console.log('💾 [WEBHOOK] Linhas afetadas:', updateResult.affectedRows);
 
-                for (const purchase of purchases) {
-                    await db.query(
-                        'UPDATE experiences_WED SET available_quotas = available_quotas - ? WHERE id = ?',
-                        [purchase.quantity, purchase.experience_id]
+                // Se aprovado, atualizar quotas disponíveis
+                if (status === 'approved') {
+                    console.log('🎉 [WEBHOOK] PAGAMENTO APROVADO!');
+                    
+                    const [purchases] = await db.query(
+                        'SELECT * FROM purchases_WED WHERE payment_id = ?',
+                        [externalRef]
                     );
-                }
 
-                // Enviar email de confirmação
-                if (purchases.length > 0) {
-                    const purchase = purchases[0];
-                    await sendEmail({
-                        to: purchase.guest_email,
-                        subject: 'Presente Confirmado - Casamento Vanessa & Guilherme',
-                        html: `
-                            <h1>Obrigado pelo seu presente! 🎁</h1>
-                            <p>Olá ${purchase.guest_name},</p>
-                            <p>Seu presente foi confirmado com sucesso!</p>
-                            <p><strong>Valor:</strong> R$ ${purchase.total_amount.toFixed(2)}</p>
-                            ${purchase.message ? `<p><strong>Sua mensagem:</strong> ${purchase.message}</p>` : ''}
-                            <p>Vanessa & Guilherme agradecem de coração! ❤️</p>
-                        `
-                    });
+                    console.log('🛒 [WEBHOOK] Compras encontradas:', purchases.length);
+
+                    for (const purchase of purchases) {
+                        console.log(`📦 [WEBHOOK] Atualizando quota exp ${purchase.experience_id} - Qtd: ${purchase.quantity}`);
+                        
+                        await db.query(
+                            'UPDATE experiences_WED SET available_quotas = available_quotas - ? WHERE id = ?',
+                            [purchase.quantity, purchase.experience_id]
+                        );
+                    }
+
+                    // Enviar email de confirmação
+                    if (purchases.length > 0) {
+                        const purchase = purchases[0];
+                        console.log('📧 [WEBHOOK] Enviando email para:', purchase.guest_email);
+                        
+                        try {
+                            await sendEmail({
+                                to: purchase.guest_email,
+                                subject: 'Presente Confirmado - Casamento Vanessa & Guilherme',
+                                html: `
+                                    <h1>Obrigado pelo seu presente! 🎁</h1>
+                                    <p>Olá ${purchase.guest_name},</p>
+                                    <p>Seu presente foi confirmado com sucesso!</p>
+                                    <p><strong>Valor:</strong> R$ ${purchase.total_amount.toFixed(2)}</p>
+                                    ${purchase.message ? `<p><strong>Sua mensagem:</strong> ${purchase.message}</p>` : ''}
+                                    <p>Vanessa & Guilherme agradecem de coração! ❤️</p>
+                                `
+                            });
+                            console.log('✅ [WEBHOOK] Email enviado com sucesso!');
+                        } catch (emailError) {
+                            console.error('❌ [WEBHOOK] Erro ao enviar email:', emailError.message);
+                        }
+                    }
+
+                    console.log('🎉 [WEBHOOK] Processamento concluído com sucesso!');
+                } else {
+                    console.log('⚠️ [WEBHOOK] Status não aprovado:', status);
                 }
+            } else {
+                console.log('ℹ️ [WEBHOOK] Tipo de notificação ignorado:', type);
             }
-        }
 
-        res.sendStatus(200);
-    } catch (error) {
-        console.error('Erro no webhook:', error);
-        res.sendStatus(500);
-    }
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        } catch (error) {
+            console.error('❌ [WEBHOOK] ERRO:', error.message);
+            console.error('❌ [WEBHOOK] Stack:', error.stack);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        }
+    })();
 };
 
 // Listar compras
