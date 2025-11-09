@@ -124,6 +124,43 @@ function Gifts() {
                 <div className="container">
                     <h2 className="section-title">Experiências da Lua de Mel 🌙</h2>
                     
+                    {/* Banner de Formas de Pagamento */}
+                    <div style={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        padding: '20px',
+                        borderRadius: '12px',
+                        marginBottom: '30px',
+                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>
+                            💳 Formas de Pagamento Disponíveis
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '30px',
+                            flexWrap: 'wrap',
+                            fontSize: '16px'
+                        }}>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <span style={{fontSize: '24px'}}>📱</span>
+                                <span>PIX à vista</span>
+                            </div>
+                            <div style={{
+                                width: '2px',
+                                height: '30px',
+                                background: 'rgba(255,255,255,0.3)'
+                            }}></div>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <span style={{fontSize: '24px'}}>💳</span>
+                                <span>Cartão de Crédito em até 12x sem juros</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {cart.length > 0 && (
                         <div style={{
                             background: '#667eea', 
