@@ -150,20 +150,22 @@ function Gifts() {
                                     {exp.image_url && (
                                         <img src={exp.image_url} alt={exp.title} />
                                     )}
-                                    <h3>{exp.title}</h3>
-                                    <p>{exp.description}</p>
-                                    <div className="card-price">R$ {parseFloat(exp.price).toFixed(2)}</div>
-                                    <div className="card-quotas">
-                                        {exp.available_quotas} de {exp.total_quotas} quotas disponíveis
+                                    <div>
+                                        <h3>{exp.title}</h3>
+                                        <p>{exp.description}</p>
+                                        <div className="card-price">R$ {parseFloat(exp.price).toFixed(2)}</div>
+                                        <div className="card-quotas">
+                                            {exp.available_quotas} de {exp.total_quotas} quotas disponíveis
+                                        </div>
+                                        <button 
+                                            onClick={() => addToCart(exp)}
+                                            className="btn btn-success"
+                                            style={{width: '100%'}}
+                                            disabled={exp.available_quotas === 0}
+                                        >
+                                            {exp.available_quotas === 0 ? '❌ Esgotado' : '🎁 Presentear'}
+                                        </button>
                                     </div>
-                                    <button 
-                                        onClick={() => addToCart(exp)}
-                                        className="btn btn-success"
-                                        style={{width: '100%'}}
-                                        disabled={exp.available_quotas === 0}
-                                    >
-                                        {exp.available_quotas === 0 ? 'Esgotado' : 'Presentear'}
-                                    </button>
                                 </div>
                             ))}
                         </div>

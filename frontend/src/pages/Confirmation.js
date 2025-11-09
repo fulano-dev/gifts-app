@@ -79,12 +79,15 @@ function Confirmation() {
                 </div>
             </header>
 
-            <section className="section">
+            <section className="section" style={{paddingTop: '60px', paddingBottom: '80px'}}>
                 <div className="container">
-                    <h2 className="section-title">Confirmar Presença</h2>
+                    <div style={{textAlign: 'center', marginBottom: '40px'}}>
+                        <h2 className="section-title">Confirmar Presença</h2>
+                        <p style={{fontSize: '18px', color: '#666', marginTop: '10px'}}>❤️</p>
+                    </div>
                     
-                    <div style={{maxWidth: '600px', margin: '0 auto'}}>
-                        <div className="card">
+                    <div className="confirmation-container">
+                        <div className="confirmation-card">
                             <div className="form-group">
                                 <label>Digite seu nome</label>
                                 <div className="autocomplete">
@@ -112,7 +115,7 @@ function Confirmation() {
                             </div>
 
                             {selectedGuests.length > 0 && (
-                                <div>
+                                <div className="form-group">
                                     <label>Convidados selecionados:</label>
                                     <div className="selected-guests">
                                         {selectedGuests.map(guest => (
@@ -134,7 +137,7 @@ function Confirmation() {
                                     placeholder="seuemail@exemplo.com"
                                     required
                                 />
-                                <small style={{color: '#666', marginTop: '5px', display: 'block'}}>
+                                <small style={{color: '#888', marginTop: '8px', display: 'block', fontSize: '14px'}}>
                                     Enviaremos os detalhes do evento para este email
                                 </small>
                             </div>
@@ -142,12 +145,12 @@ function Confirmation() {
                             <button 
                                 onClick={confirmPresence} 
                                 className="btn btn-success"
-                                style={{width: '100%', marginTop: '20px'}}
+                                style={{width: '100%', marginTop: '10px'}}
                             >
-                                Confirmar Presença
+                                ✨ Confirmar Presença
                             </button>
 
-                            <p style={{marginTop: '20px', textAlign: 'center', color: '#666'}}>
+                            <p style={{marginTop: '25px', textAlign: 'center', color: '#888', fontSize: '15px', lineHeight: '1.6'}}>
                                 Após confirmar, você receberá um email com todos os detalhes do evento!
                             </p>
                         </div>

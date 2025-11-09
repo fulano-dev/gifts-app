@@ -213,7 +213,7 @@ exports.getFinancialSummary = async (req, res) => {
 
         const [withdrawals] = await db.query(`
             SELECT SUM(amount) as total_withdrawn
-            FROM withdrawals
+            FROM withdrawals_WED
             WHERE status = 'approved'
         `);
 

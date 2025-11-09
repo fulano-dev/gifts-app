@@ -36,12 +36,15 @@ function Login() {
                 </div>
             </header>
 
-            <section className="section">
+            <section className="section" style={{paddingTop: '60px', paddingBottom: '80px'}}>
                 <div className="container">
-                    <h2 className="section-title">Login - Painel Administrativo</h2>
+                    <div style={{textAlign: 'center', marginBottom: '40px'}}>
+                        <h2 className="section-title">Login - Painel Administrativo</h2>
+                        <p style={{fontSize: '18px', color: '#666', marginTop: '10px'}}>❤️</p>
+                    </div>
                     
-                    <div style={{maxWidth: '400px', margin: '0 auto'}}>
-                        <div className="card">
+                    <div className="login-container">
+                        <div className="login-card">
                             <form onSubmit={handleSubmit}>
                                 <div className="form-group">
                                     <label>Email</label>
@@ -50,6 +53,7 @@ function Login() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        placeholder="seu@email.com"
                                     />
                                 </div>
 
@@ -60,16 +64,17 @@ function Login() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
+                                        placeholder="••••••••"
                                     />
                                 </div>
 
                                 <button 
                                     type="submit" 
                                     className="btn btn-primary"
-                                    style={{width: '100%'}}
+                                    style={{width: '100%', marginTop: '10px'}}
                                     disabled={loading}
                                 >
-                                    {loading ? 'Entrando...' : 'Entrar'}
+                                    {loading ? '⏳ Entrando...' : '🔐 Entrar'}
                                 </button>
                             </form>
                         </div>

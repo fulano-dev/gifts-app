@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -39,6 +39,7 @@ function App() {
             <Route path="/pagamento/erro" element={<PaymentError />} />
             
             {/* Autenticação */}
+            <Route path="/admin" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             
             {/* Painel */}
