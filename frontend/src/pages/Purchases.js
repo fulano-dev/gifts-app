@@ -99,7 +99,15 @@ function Purchases() {
                                         <td>{purchase.guest_email}</td>
                                         <td>{purchase.experience_title}</td>
                                         <td>{purchase.quantity}</td>
-                                        <td>R$ {parseFloat(purchase.total_amount).toFixed(2)}</td>
+                                        <td>
+                                            {user?.role === 'admin' ? (
+                                                // Admin vê valor bruto
+                                                `R$ ${parseFloat(purchase.total_amount).toFixed(2)}`
+                                            ) : (
+                                                // Noivos veem valor após taxa administrativa
+                                                `R$ ${parseFloat(purchase.couple_amount || 0).toFixed(2)}`
+                                            )}
+                                        </td>
                                         <td style={{maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                                             {purchase.message || '-'}
                                         </td>
