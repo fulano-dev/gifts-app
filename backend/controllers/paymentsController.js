@@ -228,24 +228,223 @@ exports.paymentWebhook = async (req, res) => {
                     // Enviar email de confirmação
                     if (purchases.length > 0) {
                         const purchase = purchases[0];
-                        console.log('📧 [WEBHOOK] Enviando email para:', purchase.guest_email);
+                        console.log('📧 [WEBHOOK] Enviando emails...');
                         
                         try {
                             const totalAmount = parseFloat(purchase.total_amount) || 0;
+                            const mpFee = parseFloat(purchase.mercadopago_fee) || 0;
+                            const adminFee = parseFloat(purchase.admin_fee_amount) || 0;
+                            const coupleAmount = parseFloat(purchase.couple_amount) || 0;
                             
+                            // Buscar nome da experiência
+                            const [experiences] = await db.query(
+                                'SELECT title FROM experiences_WED WHERE id = ?',
+                                [purchase.experience_id]
+                            );
+                            const experienceTitle = experiences[0]?.title || 'Presente';
+                            
+                            // Buscar dados dos noivos e admin
+                            const [users] = await db.query(
+                                'SELECT name, email, role FROM users_WED WHERE role IN ("couple", "admin")'
+                            );
+                            const coupleUsers = users.filter(u => u.role === 'couple');
+                            const adminUsers = users.filter(u => u.role === 'admin');
+                            
+                            // Template de email bonito
+                            const emailStyle = `
+                                <style>
+                                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9fafb; margin: 0; padding: 20px; }
+                                    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }
+                                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; }
+                                    .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+                                    .content { padding: 40px 30px; }
+                                    .gift-box { background: #f3f4f6; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                                    .amount { font-size: 36px; font-weight: bold; color: #667eea; margin: 10px 0; }
+                                    .message-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 8px; font-style: italic; }
+                                    .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }
+                                    .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+                                    .details { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                                    .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+                                    .details-row:last-child { border-bottom: none; font-weight: bold; color: #10b981; }
+                                    .emoji { font-size: 48px; margin: 20px 0; }
+                                </style>
+                            `;
+                            
+                            // 1. EMAIL PARA O CONVIDADO
                             await sendEmail({
                                 to: purchase.guest_email,
-                                subject: 'Presente Confirmado - Casamento Vanessa & Guilherme',
+                                subject: '🎁 Presente Confirmado - Casamento Vanessa & Guilherme',
                                 html: `
-                                    <h1>Obrigado pelo seu presente! 🎁</h1>
-                                    <p>Olá ${purchase.guest_name},</p>
-                                    <p>Seu presente foi confirmado com sucesso!</p>
-                                    <p><strong>Valor:</strong> R$ ${totalAmount.toFixed(2)}</p>
-                                    ${purchase.message ? `<p><strong>Sua mensagem:</strong> ${purchase.message}</p>` : ''}
-                                    <p>Vanessa & Guilherme agradecem de coração! ❤️</p>
+                                    ${emailStyle}
+                                    <div class="container">
+                                        <div class="header">
+                                            <div class="emoji">🎉</div>
+                                            <h1>Presente Confirmado!</h1>
+                                        </div>
+                                        <div class="content">
+                                            <p style="font-size: 18px; color: #374151;">Olá <strong>${purchase.guest_name}</strong>,</p>
+                                            <p>Seu presente foi confirmado com sucesso! Vanessa & Guilherme agradecem de coração pela sua generosidade e carinho.</p>
+                                            
+                                            <div class="gift-box">
+                                                <p style="margin: 0; color: #6b7280; font-size: 14px;">PRESENTE SELECIONADO</p>
+                                                <h2 style="margin: 10px 0; color: #1f2937;">${experienceTitle}</h2>
+                                                <p style="margin: 0; color: #6b7280;">Quantidade: ${purchase.quantity}</p>
+                                            </div>
+                                            
+                                            <div style="text-align: center; margin: 30px 0;">
+                                                <p style="margin: 0; color: #6b7280; font-size: 14px;">VALOR DO PRESENTE</p>
+                                                <div class="amount">R$ ${totalAmount.toFixed(2)}</div>
+                                            </div>
+                                            
+                                            ${purchase.message ? `
+                                                <div class="message-box">
+                                                    <p style="margin: 0; color: #92400e; font-size: 14px; font-weight: 600;">SUA MENSAGEM PARA OS NOIVOS:</p>
+                                                    <p style="margin: 10px 0 0 0; color: #78350f;">"${purchase.message}"</p>
+                                                </div>
+                                            ` : ''}
+                                            
+                                            <p style="color: #6b7280; margin-top: 30px;">O casal receberá uma notificação sobre seu presente e sua mensagem especial.</p>
+                                            
+                                            <div style="text-align: center; margin: 30px 0;">
+                                                <p style="font-size: 24px; margin: 0;">💝</p>
+                                                <p style="color: #667eea; font-weight: 600; margin: 10px 0;">Obrigado por fazer parte deste momento especial!</p>
+                                            </div>
+                                        </div>
+                                        <div class="footer">
+                                            <p style="margin: 0;">Vanessa & Guilherme</p>
+                                            <p style="margin: 5px 0 0 0; font-size: 12px;">❤️ Casamento 2025</p>
+                                        </div>
+                                    </div>
                                 `
                             });
-                            console.log('✅ [WEBHOOK] Email enviado com sucesso!');
+                            console.log('✅ [WEBHOOK] Email enviado para convidado:', purchase.guest_email);
+                            
+                            // 2. EMAIL PARA OS NOIVOS
+                            for (const couple of coupleUsers) {
+                                await sendEmail({
+                                    to: couple.email,
+                                    subject: `🎁 Novo Presente Recebido de ${purchase.guest_name}`,
+                                    html: `
+                                        ${emailStyle}
+                                        <div class="container">
+                                            <div class="header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                                <div class="emoji">💝</div>
+                                                <h1>Vocês receberam um presente!</h1>
+                                            </div>
+                                            <div class="content">
+                                                <p style="font-size: 18px; color: #374151;">Olá <strong>${couple.name}</strong>,</p>
+                                                <p>Parabéns! Vocês acabaram de receber um novo presente!</p>
+                                                
+                                                <div class="gift-box" style="border-left-color: #10b981;">
+                                                    <p style="margin: 0; color: #6b7280; font-size: 14px;">PRESENTE</p>
+                                                    <h2 style="margin: 10px 0; color: #1f2937;">${experienceTitle}</h2>
+                                                    <p style="margin: 5px 0; color: #6b7280;">Quantidade: ${purchase.quantity}</p>
+                                                    <p style="margin: 5px 0; color: #6b7280;">De: <strong>${purchase.guest_name}</strong></p>
+                                                    <p style="margin: 5px 0; color: #6b7280;">Email: ${purchase.guest_email}</p>
+                                                </div>
+                                                
+                                                <div class="details">
+                                                    <div class="details-row">
+                                                        <span>💰 Valor Total:</span>
+                                                        <span style="font-weight: 600;">R$ ${totalAmount.toFixed(2)}</span>
+                                                    </div>
+                                                    <div class="details-row">
+                                                        <span>💳 Taxa MercadoPago:</span>
+                                                        <span style="color: #ef4444;">- R$ ${mpFee.toFixed(2)}</span>
+                                                    </div>
+                                                    <div class="details-row">
+                                                        <span>📊 Taxa Administrativa:</span>
+                                                        <span style="color: #f59e0b;">- R$ ${adminFee.toFixed(2)}</span>
+                                                    </div>
+                                                    <div class="details-row">
+                                                        <span>💚 Valor para Vocês:</span>
+                                                        <span>R$ ${coupleAmount.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                ${purchase.message ? `
+                                                    <div class="message-box">
+                                                        <p style="margin: 0; color: #92400e; font-size: 14px; font-weight: 600;">💌 MENSAGEM DO CONVIDADO:</p>
+                                                        <p style="margin: 10px 0 0 0; color: #78350f; font-size: 16px;">"${purchase.message}"</p>
+                                                    </div>
+                                                ` : ''}
+                                                
+                                                <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f0fdf4; border-radius: 8px;">
+                                                    <p style="margin: 0; font-size: 18px; color: #10b981; font-weight: 600;">🎉 Parabéns pelo novo presente!</p>
+                                                </div>
+                                            </div>
+                                            <div class="footer">
+                                                <p style="margin: 0;">Sistema de Presentes - Casamento</p>
+                                            </div>
+                                        </div>
+                                    `
+                                });
+                                console.log('✅ [WEBHOOK] Email enviado para noivo(a):', couple.email);
+                            }
+                            
+                            // 3. EMAIL PARA O ADMIN
+                            for (const admin of adminUsers) {
+                                await sendEmail({
+                                    to: admin.email,
+                                    subject: `💰 Novo Pagamento - Casamento Vanessa & Guilherme`,
+                                    html: `
+                                        ${emailStyle}
+                                        <div class="container">
+                                            <div class="header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                                                <div class="emoji">💰</div>
+                                                <h1>Novo Pagamento Recebido</h1>
+                                            </div>
+                                            <div class="content">
+                                                <p style="font-size: 18px; color: #374151;">Olá <strong>${admin.name}</strong>,</p>
+                                                <p>Um novo pagamento para o casamento de <strong>Vanessa & Guilherme</strong> foi recebido com sucesso!</p>
+                                                
+                                                <div style="text-align: center; margin: 30px 0; padding: 20px; background: #eff6ff; border-radius: 8px;">
+                                                    <p style="margin: 0; color: #6b7280; font-size: 14px;">VALOR RECEBIDO</p>
+                                                    <div class="amount" style="color: #3b82f6;">R$ ${totalAmount.toFixed(2)}</div>
+                                                </div>
+                                                
+                                                <div class="gift-box" style="border-left-color: #3b82f6;">
+                                                    <p style="margin: 0; color: #6b7280; font-size: 14px;">DETALHES DA COMPRA</p>
+                                                    <p style="margin: 10px 0 5px 0;"><strong>Presente:</strong> ${experienceTitle}</p>
+                                                    <p style="margin: 5px 0;"><strong>Quantidade:</strong> ${purchase.quantity}</p>
+                                                    <p style="margin: 5px 0;"><strong>Comprador:</strong> ${purchase.guest_name}</p>
+                                                    <p style="margin: 5px 0;"><strong>Email:</strong> ${purchase.guest_email}</p>
+                                                </div>
+                                                
+                                                <div class="details">
+                                                    <div class="details-row">
+                                                        <span>💰 Valor Total:</span>
+                                                        <span style="font-weight: 600;">R$ ${totalAmount.toFixed(2)}</span>
+                                                    </div>
+                                                    <div class="details-row">
+                                                        <span>💳 Taxa MercadoPago (${purchase.admin_fee_percentage}%):</span>
+                                                        <span style="color: #ef4444;">R$ ${mpFee.toFixed(2)}</span>
+                                                    </div>
+                                                    <div class="details-row">
+                                                        <span>📊 Taxa Administrativa (${purchase.admin_fee_percentage}%):</span>
+                                                        <span style="color: #3b82f6;">R$ ${adminFee.toFixed(2)}</span>
+                                                    </div>
+                                                    <div class="details-row">
+                                                        <span>💚 Valor dos Noivos:</span>
+                                                        <span style="color: #6b7280;">R$ ${coupleAmount.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div style="text-align: center; margin: 30px 0;">
+                                                    <p style="color: #6b7280; font-size: 14px; margin: 0;">ID do Pagamento</p>
+                                                    <p style="color: #3b82f6; font-family: monospace; margin: 5px 0;">#${mpPaymentId}</p>
+                                                </div>
+                                            </div>
+                                            <div class="footer">
+                                                <p style="margin: 0;">Sistema Administrativo - Casamentos</p>
+                                            </div>
+                                        </div>
+                                    `
+                                });
+                                console.log('✅ [WEBHOOK] Email enviado para admin:', admin.email);
+                            }
+                            
+                            console.log('✅ [WEBHOOK] Todos os emails enviados com sucesso!');
                         } catch (emailError) {
                             console.error('❌ [WEBHOOK] Erro ao enviar email:', emailError.message);
                         }
