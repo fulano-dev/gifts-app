@@ -12,7 +12,7 @@ exports.listExperiences = async (req, res) => {
             params.push(active === 'true' ? 1 : 0);
         }
 
-        query += ' ORDER BY created_at DESC';
+        query += ' ORDER BY title ASC';
 
         const [experiences] = await db.query(query, params);
         res.json(experiences);
