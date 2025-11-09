@@ -231,6 +231,8 @@ exports.paymentWebhook = async (req, res) => {
                         console.log('📧 [WEBHOOK] Enviando email para:', purchase.guest_email);
                         
                         try {
+                            const totalAmount = parseFloat(purchase.total_amount) || 0;
+                            
                             await sendEmail({
                                 to: purchase.guest_email,
                                 subject: 'Presente Confirmado - Casamento Vanessa & Guilherme',
@@ -238,7 +240,7 @@ exports.paymentWebhook = async (req, res) => {
                                     <h1>Obrigado pelo seu presente! 🎁</h1>
                                     <p>Olá ${purchase.guest_name},</p>
                                     <p>Seu presente foi confirmado com sucesso!</p>
-                                    <p><strong>Valor:</strong> R$ ${purchase.total_amount.toFixed(2)}</p>
+                                    <p><strong>Valor:</strong> R$ ${totalAmount.toFixed(2)}</p>
                                     ${purchase.message ? `<p><strong>Sua mensagem:</strong> ${purchase.message}</p>` : ''}
                                     <p>Vanessa & Guilherme agradecem de coração! ❤️</p>
                                 `
@@ -298,32 +300,33 @@ exports.getFinancialSummary = async (req, res) => {
     try {
         const [summary] = await db.query(`
             SELECT 
-                SUM(total_amount) as total_received,
-                SUM(mercadopago_fee) as total_mp_fee,
-                SUM(admin_fee_amount) as total_admin_fee,
-                SUM(couple_amount) as total_couple_amount,
+                COALESCE(SUM(total_amount), 0) as total_received,
+                COALESCE(SUM(mercadopago_fee), 0) as total_mp_fee,
+                COALESCE(SUM(admin_fee_amount), 0) as total_admin_fee,
+                COALESCE(SUM(couple_amount), 0) as total_couple_amount,
                 COUNT(*) as total_purchases
             FROM purchases_WED
             WHERE payment_status = 'approved'
         `);
 
         const [withdrawals] = await db.query(`
-            SELECT SUM(amount) as total_withdrawn
+            SELECT COALESCE(SUM(amount), 0) as total_withdrawn
             FROM withdrawals_WED
             WHERE status = 'approved'
         `);
 
-        const totalWithdrawn = withdrawals[0].total_withdrawn || 0;
-        const availableBalance = (summary[0].total_couple_amount || 0) - totalWithdrawn;
+        const totalWithdrawn = parseFloat(withdrawals[0].total_withdrawn) || 0;
+        const totalCoupleAmount = parseFloat(summary[0].total_couple_amount) || 0;
+        const availableBalance = totalCoupleAmount - totalWithdrawn;
 
         res.json({
-            total_received: summary[0].total_received || 0,
-            total_mp_fee: summary[0].total_mp_fee || 0,
-            total_admin_fee: summary[0].total_admin_fee || 0,
-            total_couple_amount: summary[0].total_couple_amount || 0,
+            total_received: parseFloat(summary[0].total_received) || 0,
+            total_mp_fee: parseFloat(summary[0].total_mp_fee) || 0,
+            total_admin_fee: parseFloat(summary[0].total_admin_fee) || 0,
+            total_couple_amount: totalCoupleAmount,
             total_withdrawn: totalWithdrawn,
             available_balance: availableBalance,
-            total_purchases: summary[0].total_purchases || 0
+            total_purchases: parseInt(summary[0].total_purchases) || 0
         });
     } catch (error) {
         console.error('Erro ao buscar resumo financeiro:', error);

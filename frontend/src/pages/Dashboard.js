@@ -46,41 +46,41 @@ function Dashboard() {
                 <div className="stats-grid">
                     <div className="stat-card">
                         <h3>Total Recebido</h3>
-                        <div className="value">R$ {summary?.total_received?.toFixed(2) || '0.00'}</div>
+                        <div className="value">R$ {(parseFloat(summary?.total_received) || 0).toFixed(2)}</div>
                     </div>
                     
                     <div className="stat-card">
                         <h3>Taxa Mercado Pago</h3>
                         <div className="value" style={{color: '#ef4444'}}>
-                            R$ {summary?.total_mp_fee?.toFixed(2) || '0.00'}
+                            R$ {(parseFloat(summary?.total_mp_fee) || 0).toFixed(2)}
                         </div>
                     </div>
                     
                     <div className="stat-card">
                         <h3>Taxa Administrativa</h3>
                         <div className="value" style={{color: '#f59e0b'}}>
-                            R$ {summary?.total_admin_fee?.toFixed(2) || '0.00'}
+                            R$ {(parseFloat(summary?.total_admin_fee) || 0).toFixed(2)}
                         </div>
                     </div>
                     
                     <div className="stat-card">
                         <h3>Valor dos Noivos</h3>
                         <div className="value" style={{color: '#10b981'}}>
-                            R$ {summary?.total_couple_amount?.toFixed(2) || '0.00'}
+                            R$ {(parseFloat(summary?.total_couple_amount) || 0).toFixed(2)}
                         </div>
                     </div>
                     
                     <div className="stat-card">
                         <h3>Total Sacado</h3>
                         <div className="value" style={{color: '#6366f1'}}>
-                            R$ {summary?.total_withdrawn?.toFixed(2) || '0.00'}
+                            R$ {(parseFloat(summary?.total_withdrawn) || 0).toFixed(2)}
                         </div>
                     </div>
                     
                     <div className="stat-card">
                         <h3>Saldo Disponível</h3>
                         <div className="value" style={{color: '#10b981', fontSize: '28px'}}>
-                            R$ {summary?.available_balance?.toFixed(2) || '0.00'}
+                            R$ {(parseFloat(summary?.available_balance) || 0).toFixed(2)}
                         </div>
                     </div>
                 </div>
