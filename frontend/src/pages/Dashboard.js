@@ -109,7 +109,16 @@ function Dashboard() {
                     // DASHBOARD DOS NOIVOS - Só veem saldo disponível
                     <>
                         <div className="stats-grid">
-                            
+
+                         <div className="stat-card">
+                                <h3>Saldo Disponível para Saque</h3>
+                                <div className="value" style={{color: '#10b981', fontSize: '32px'}}>
+                                    R$ {(parseFloat(summary?.available_balance) || 0).toFixed(2)}
+                                </div>
+                                <p style={{fontSize: '12px', color: '#10b981', marginTop: '10px', fontWeight: '600'}}>
+                                    ✓ Disponível para saque
+                                </p>
+                            </div>    
                             
                             <div className="stat-card">
                                 <h3>Total Sacado</h3>
@@ -118,15 +127,7 @@ function Dashboard() {
                                 </div>
                             </div>
                             
-                            <div className="stat-card">
-                                <h3>Saldo Disponível para Saque</h3>
-                                <div className="value" style={{color: '#10b981', fontSize: '32px'}}>
-                                    R$ {(parseFloat(summary?.available_balance) || 0).toFixed(2)}
-                                </div>
-                                <p style={{fontSize: '12px', color: '#10b981', marginTop: '10px', fontWeight: '600'}}>
-                                    ✓ Disponível para saque
-                                </p>
-                            </div>
+                           
                         </div>
                         <div className="stat-card">
                                 <h3>Total Recebido:</h3>
