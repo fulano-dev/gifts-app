@@ -82,7 +82,7 @@ exports.updateGuest = async (req, res) => {
 exports.deleteGuest = async (req, res) => {
     try {
         const { id } = req.params;
-        await db.query('DELETE FROM guests_WED_WED WHERE id = ?', [id]);
+        await db.query('DELETE FROM guests_WED WHERE id = ?', [id]);
         res.json({ message: 'Convidado deletado com sucesso' });
     } catch (error) {
         console.error('Erro ao deletar convidado:', error);

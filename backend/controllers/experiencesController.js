@@ -83,13 +83,13 @@ exports.deleteExperience = async (req, res) => {
         const { id } = req.params;
 
         // Verificar se existem compras relacionadas
-        const [purchases] = await db.query('SELECT COUNT(*) as count FROM purchases WHERE experience_id = ?', [id]);
+        const [purchases] = await db.query('SELECT COUNT(*) as count FROM purchases_wed WHERE experience_id = ?', [id]);
         
         if (purchases[0].count > 0) {
             return res.status(400).json({ error: 'Não é possível deletar uma experiência com compras associadas' });
         }
 
-        await db.query('DELETE FROM experiences_WED_WED WHERE id = ?', [id]);
+        await db.query('DELETE FROM experiences_WED WHERE id = ?', [id]);
         res.json({ message: 'Experiência deletada com sucesso' });
     } catch (error) {
         console.error('Erro ao deletar experiência:', error);
