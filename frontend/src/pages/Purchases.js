@@ -56,6 +56,13 @@ function Purchases() {
         );
     };
 
+    // Função para substituir ? por emojis de coração
+    const fixEmojis = (text) => {
+        if (!text) return '-';
+        // Substitui ? isolados ou múltiplos por corações
+        return text.replace(/\?+/g, '💖');
+    };
+
     if (loading) {
         return (
             <div className="loading">
@@ -109,7 +116,7 @@ function Purchases() {
                                             )}
                                         </td>
                                         <td style={{maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                                            {purchase.message || '-'}
+                                            {fixEmojis(purchase.message)}
                                         </td>
                                         <td>{getStatusBadge(purchase.payment_status)}</td>
                                     </tr>

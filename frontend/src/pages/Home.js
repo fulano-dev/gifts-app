@@ -11,6 +11,7 @@ function Home() {
     useEffect(() => {
         loadWeddingInfo();
         loadMessages();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -34,10 +35,21 @@ function Home() {
         }
     };
 
+    // Função para embaralhar array
+    const shuffleArray = (array) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
     const loadMessages = async () => {
         try {
             const response = await api.get('/payments/messages');
-            setMessages(response.data);
+            // Embaralha as mensagens antes de salvar no estado
+            setMessages(shuffleArray(response.data));
         } catch (error) {
             console.error('Erro ao carregar mensagens:', error);
         }
@@ -49,6 +61,13 @@ function Home() {
 
     const prevSlide = () => {
         setCurrentSlide((prev) => (prev - 1 + messages.length) % messages.length);
+    };
+
+    // Função para substituir ? por emojis de coração
+    const fixEmojis = (text) => {
+        if (!text) return '';
+        // Substitui ? isolados ou múltiplos por corações
+        return text.replace(/\?+/g, '💖');
     };
 
     if (loading) {
@@ -143,7 +162,7 @@ function Home() {
                                     fontStyle: 'italic',
                                     textAlign: 'center'
                                 }}>
-                                    {messages[currentSlide].message}
+                                    {fixEmojis(messages[currentSlide].message)}
                                 </div>
                                 
                                 {/* Autor e Presente */}
