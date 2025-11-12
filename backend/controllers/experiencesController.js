@@ -15,6 +15,19 @@ exports.listExperiences = async (req, res) => {
         query += ' ORDER BY title ASC';
 
         const [experiences] = await db.query(query, params);
+        
+        // Para cada experiência, buscar os presenteadores (compras aprovadas)
+        for (let exp of experiences) {
+            const [givers] = await db.query(
+                `SELECT guest_name, quantity, created_at 
+                 FROM purchases_WED 
+                 WHERE experience_id = ? AND payment_status = 'approved'
+                 ORDER BY created_at DESC`,
+                [exp.id]
+            );
+            exp.givers = givers;
+        }
+        
         res.json(experiences);
     } catch (error) {
         console.error('Erro ao listar experiências:', error);

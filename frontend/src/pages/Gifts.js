@@ -209,13 +209,44 @@ function Gifts() {
                                         <h3>{exp.title}</h3>
                                         <p>{exp.description}</p>
                                         <div className="card-price">R$ {parseFloat(exp.price).toFixed(2)}</div>
+                                        <div style={{
+                                            fontSize: '13px', 
+                                            color: '#10b981', 
+                                            marginTop: '5px',
+                                            marginBottom: '8px'
+                                        }}>
+                                            💳 Ou em até 12x de R$ {(parseFloat(exp.price) / 12).toFixed(2)} sem juros
+                                        </div>
                                         <div className="card-quotas">
                                             {exp.available_quotas} de {exp.total_quotas} quotas disponíveis
                                         </div>
+                                        
+                                        {/* Lista de presenteadores */}
+                                        {exp.givers && exp.givers.length > 0 && (
+                                            <div style={{
+                                                marginTop: '12px',
+                                                padding: '10px',
+                                                background: '#f0f9ff',
+                                                borderRadius: '8px',
+                                                fontSize: '12px'
+                                            }}>
+                                                <div style={{fontWeight: 'bold', color: '#0369a1', marginBottom: '6px'}}>
+                                                    💝 Presenteado por:
+                                                </div>
+                                                <div style={{color: '#0c4a6e'}}>
+                                                    {exp.givers.map((giver, index) => (
+                                                        <div key={index} style={{marginBottom: '3px'}}>
+                                                            • {giver.guest_name} ({giver.quantity}x)
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
                                         <button 
                                             onClick={() => addToCart(exp)}
                                             className="btn btn-success"
-                                            style={{width: '100%'}}
+                                            style={{width: '100%', marginTop: '10px'}}
                                             disabled={exp.available_quotas === 0}
                                         >
                                             {exp.available_quotas === 0 ? '❌ Esgotado' : '🎁 Presentear'}
