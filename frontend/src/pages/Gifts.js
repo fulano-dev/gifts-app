@@ -201,11 +201,11 @@ function Gifts() {
                     ) : (
                         <div className="cards-grid">
                             {experiences.map(exp => (
-                                <div key={exp.id} className="card">
+                                <div key={exp.id} className="card" style={{display: 'flex', flexDirection: 'column'}}>
                                     {exp.image_url && (
                                         <img src={exp.image_url} alt={exp.title} />
                                     )}
-                                    <div>
+                                    <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
                                         <h3>{exp.title}</h3>
                                         <p>{exp.description}</p>
                                         <div className="card-price">R$ {parseFloat(exp.price).toFixed(2)}</div>
@@ -245,7 +245,7 @@ function Gifts() {
                                         <button 
                                             onClick={() => addToCart(exp)}
                                             className="btn btn-success"
-                                            style={{width: '100%', marginTop: '10px'}}
+                                            style={{width: '100%', marginTop: 'auto', marginBottom: '0'}}
                                             disabled={exp.available_quotas === 0}
                                         >
                                             {exp.available_quotas === 0 ? '❌ Esgotado' : '🎁 Presentear'}
