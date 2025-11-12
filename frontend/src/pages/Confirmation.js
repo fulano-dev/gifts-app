@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import Footer from '../components/Footer';
 
 function Confirmation() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -157,6 +158,8 @@ function Confirmation() {
                     </div>
                 </div>
             </section>
+            
+            <Footer />
         </div>
     );
 }

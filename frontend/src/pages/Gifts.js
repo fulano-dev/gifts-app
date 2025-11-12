@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import Footer from '../components/Footer';
 
 function Gifts() {
     const [experiences, setExperiences] = useState([]);
@@ -340,6 +341,8 @@ function Gifts() {
                     </div>
                 </div>
             )}
+            
+            <Footer />
         </div>
     );
 }
