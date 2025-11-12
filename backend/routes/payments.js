@@ -6,6 +6,8 @@ const { authMiddleware, coupleOrAdminMiddleware } = require('../middleware/auth'
 // Rotas públicas
 router.post('/create', paymentsController.createPayment);
 router.post('/webhook', paymentsController.paymentWebhook);
+router.get('/installments', paymentsController.calculateInstallments);
+router.get('/messages', paymentsController.getPublicMessages);
 
 // Rotas autenticadas
 router.get('/', authMiddleware, coupleOrAdminMiddleware, paymentsController.listPurchases);

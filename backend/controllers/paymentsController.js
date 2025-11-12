@@ -585,3 +585,28 @@ exports.getFinancialSummary = async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar resumo financeiro' });
     }
 };
+
+// Listar mensagens públicas dos presenteadores (para o carrossel)
+exports.getPublicMessages = async (req, res) => {
+    try {
+        const [messages] = await db.query(`
+            SELECT 
+                p.guest_name,
+                p.message,
+                e.title as experience_title,
+                p.created_at
+            FROM purchases_WED p
+            JOIN experiences_WED e ON p.experience_id = e.id
+            WHERE p.payment_status = 'approved' 
+            AND p.message IS NOT NULL 
+            AND p.message != ''
+            ORDER BY p.created_at DESC
+            LIMIT 20
+        `);
+        
+        res.json(messages);
+    } catch (error) {
+        console.error('Erro ao buscar mensagens:', error);
+        res.status(500).json({ error: 'Erro ao buscar mensagens' });
+    }
+};
