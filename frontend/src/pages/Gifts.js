@@ -215,8 +215,7 @@ function Gifts() {
                                             marginTop: '5px',
                                             marginBottom: '8px'
                                         }}>
-                                            💳 Ou em até 12x de R$ {(parseFloat(exp.price) / 12).toFixed(2)} sem juros
-                                        </div>
+                                            💳 Ou em até 12x com juros no cartão                                        </div>
                                         <div className="card-quotas">
                                             {exp.available_quotas} de {exp.total_quotas} quotas disponíveis
                                         </div>
